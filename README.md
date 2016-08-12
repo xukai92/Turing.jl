@@ -6,17 +6,17 @@ This separate branch of Turing is a milestone version with HMC sampler supported
 
 1. Install Julia from the official Julia [website](http://julialang.org/downloads/).
 
-The pre-compiled package is recommended, as Turing may not work correctly with Julia built form source.
+  The pre-compiled package is recommended, as Turing may not work correctly with Julia built form source.
 
 2. Use the following code to install Turing from GitHub and do testing.
 
-```julia
-Pkg.clone("https://github.com/yebai/Turing.jl")
-Pkg.build("Turing")
-Pkg.test("Turing")
-```
+  ```julia
+  Pkg.clone("https://github.com/yebai/Turing.jl")
+  Pkg.build("Turing")
+  Pkg.test("Turing")
+  ```
 
-If all tests pass, you're ready to start using Turing.
+  If all tests pass, you're ready to start using Turing.
 
 ### Example
 ```
