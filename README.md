@@ -44,9 +44,11 @@ s = mean(chain[:s])
 
 ## Summary of updates
 
+The files below are work done by Kai Xu in his M.Phil project.
+
 `src/samplers/hmc.jl` - the HMC sampler
 - The algorithm implemented is described in **Algorithm 30.1** on P388 of MacKay's book _Information Theory, Inference and Learning Algorithms_.
--  Gradient information is computed by passing through variables in `Dual` type, which is the forward mode of automatic differentiation.
+- Gradient information is computed by passing through variables in `Dual` type, which is the forward mode of automatic differentiation.
 
 `src/samplers/support/prior.jl` - a type to pass prior information from the compiler to the HMC sampler
 - This type is aimed to support `@assume` to interact with both single variables and arrays.
