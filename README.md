@@ -1,6 +1,22 @@
 # Turing.jl
 
-This separate branch of Turing is a milestone version with HMC sampler supported and is for the evaluation purpose of the M.Phil project. The master repository of Turing is at [Turing.jl](https://github.com/yebai/Turing.jl).
+This separate branch of Turing is a milestone version with HMC sampler supported and is for the evaluation purpose of the M.Phil project of [Kai Xu](https://xukai92.github.io). The master repository of Turing is at [Turing.jl](https://github.com/yebai/Turing.jl).
+
+## Installation
+
+1. Install Julia from the official Julia [website](http://julialang.org/downloads/).
+
+The pre-compiled package is recommended, as Turing may not work correctly with Julia built form source.
+
+2. Use the following code to install Turing from GitHub and do testing.
+
+```julia
+Pkg.clone("https://github.com/yebai/Turing.jl")
+Pkg.build("Turing")
+Pkg.test("Turing")
+```
+
+If all tests pass, you're ready to start using Turing.
 
 ### Example
 ```
@@ -25,29 +41,6 @@ m = mean(chain[:m])
 s = mean(chain[:s])
 ```
 
-## Installation
-
-You will need Julia 0.4, which you can get from the official Julia [website](http://julialang.org/downloads/). We recommend that you install a pre-compiled package, as Turing may not work correctly with Julia built form source.
-
-Turing is an officially registered Julia package, so the following should work:
-
-```julia
-Pkg.update()
-Pkg.add("Turing")
-Pkg.test("Turing")
-```
-
-If Turing can not be located, you can try the following instead:
-
-```julia
-Pkg.clone("https://github.com/yebai/Turing.jl")
-Pkg.build("Turing")
-Pkg.test("Turing")
-```
-
-If all tests pass, you're ready to start using Turing.
-
-This patch adds the standard HMC sampler to Turing.
 
 ## Summary of updates
 
