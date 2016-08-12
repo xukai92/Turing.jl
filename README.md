@@ -5,7 +5,7 @@
 [![Turing](http://pkg.julialang.org/badges/Turing_0.4.svg)](http://pkg.julialang.org/?pkg=Turing)
 
 
-Turing is a Julia library for probabilistic programming. A Turing probabilistic program is just a normal Julia program, wrapped in a `@model` macro, that uses some of the special macros listed below. Available inference methods include  Importance Sampling, Sequential Monte Carlo, Particle Gibbs. 
+Turing is a Julia library for probabilistic programming. A Turing probabilistic program is just a normal Julia program, wrapped in a `@model` macro, that uses some of the special macros listed below. Available inference methods include  Importance Sampling, Sequential Monte Carlo, Particle Gibbs.
 
 Authors: [Hong Ge](http://mlg.eng.cam.ac.uk/hong/), [Adam Scibior](http://mlg.eng.cam.ac.uk/?portfolio=adam-scibior), [Matej Balog](http://mlg.eng.cam.ac.uk/?portfolio=matej-balog), [Zoubin Ghahramani](http://mlg.eng.cam.ac.uk/zoubin/)
 
@@ -48,58 +48,54 @@ Pkg.test("Turing")
 
 If all tests pass, you're ready to start using Turing.
 
-## Modelling API
-A probabilistic program is Julia code wrapped in a `@model` macro. It can use arbitrary Julia code, but to ensure correctness of inference it should not have external effects or modify global state. Stack-allocated variables are safe, but mutable heap-allocated objects may lead to subtle bugs when using task copying. To help avoid those we provide a Turing-safe datatype `TArray` that can be used to create mutable arrays in Turing programs.
+This patch adds the standard HMC sampler to Turing.
 
-For probabilistic effects, Turing programs should use the following macros:
+## Summary of updates
 
-`@assume x ~ distr`
-where `x` is a symbol and `distr` is a distribution. Inside the probabilistic program this puts a random variable named `x`, distributed according to `distr`, in the current scope. `distr` can be a value of any type that implements `rand(distr)`, which samples a value from the distribution `distr`.
+`src/samplers/hmc.jl` - the HMC sampler
+- The algorithm implemented is described in **Algorithm 30.1** on P388 of MacKay's book _Information Theory, Inference and Learning Algorithms_.
+-  Gradient information is computed by passing through variables in `Dual` type, which is the forward mode of automatic differentiation.
 
-`@observe y ~ distr`
-This is used for conditioning in a style similar to Anglican. Here `y` should be a value that is observed to have been drawn from the distribution `distr`. The likelihood is computed using `pdf(distr,y)` and should always be positive to ensure correctness of inference algorithms. The observe statements should be arranged so that every possible run traverses all of them in exactly the same order. This is equivalent to demanding that they are not placed inside stochastic control flow.
+`src/samplers/support/prior.jl` - a type to pass prior information from the compiler to the HMC sampler
+- This type is aimed to support `@assume` to interact with both single variables and arrays.
+- There is a helper function `string()` which turns expressions like `xs[i]` into `xs[2]` with correct indexing.
 
-`@predict x`
-Registers the current value of `x` to be inspected in the results of inference.
+`src/core/compiler.jl`
+- `@assume` now passes a third parameter including the information of the prior in `Prior` type.
+- `@assume` and `@observe` can pass additional parameters inside the distribution constructor, e.g. `@assume m ~ Normal(0, 1; static=true)`.
+- The implementation of `@observe` passes the `logpdf()` value directly, which is not intentional according to @adscib. This is not made to be consistent with `@assume` with the interface of all samplers changed accordingly.
 
-## Inference API
-Inference methods are functions which take the probabilistic program as one of the arguments.
-```julia
-#  run sampler, collect results
-chain = sample(gaussdemo, SMC(500))
-chain = sample(gaussdemo, PG(10,500))
+`src/distributions/ddistributions.jl` - a custom wrapper of common distributions to support `Dual` type variables
+- The motivation to build our own wrapper is to pass `Dual` type variables to get gradient information using the forward mode of automatic differentiation.
+- One principle of this wrapper is to only store parameters in `Dual` without inputing or outputting any `Dual` type, which makes it easier to amend the existing samplers using the new distribution wrapper.
+- The objects from the `Distribution` package is also stored in the object of our wrapper. `rand()` and `pdf()` with `Real` type is passed to the corresponding calls in `Distribution` package.
+- Multivariate distributions are supported.
+
+`test/test_ddistribution.jl` - the test file of `dDistribution` type
+- It tests each custom distribution by 1) comparing the `pdf()` result of the custom function and the `Distribution` package; 2) comparing the gradient using `ForwardDiff` package and our implementation.
+
+`test/beta-binomial.jl` - the test file of samplers using a beta-binomial model
+- Three lines of codes were added to test the HMC sampler using the existing beta-binomial test case.
+
+**Usage**
+```
+@model gaussdemo begin
+  # Define a simple Normal model with unknown mean and variance.
+  @assume s ~ InverseGamma(2,3)
+  @assume m ~ Normal(0,sqrt(s))
+  @observe 1.5 ~ Normal(m, sqrt(s))
+  @observe 2.0 ~ Normal(m, sqrt(s))
+  @predict s m
+end
+
+res = sample(gaussdemo, HMC(1000, 0.01, 15))
 ```
 
-## Task copying
-Turing [copies](https://github.com/JuliaLang/julia/issues/4085) Julia tasks to deliver efficient inference algorithms, but it also provides alternative slower implementation as a fallback. Task copying is enabled by default. Task copying requires building a small C program, which should be done automatically on Linux and Mac systems that have GCC and Make installed.
+, where `1000` is the sample number, `0.01` is the leapfrog step size and `15` is the leapfrog step number.
 
-## Development notes
-Following GitHub guidelines, we have two main branches: master and development. We protect them with a review process to make sure at least two people approve the code before it is committed to either of them. For this reason, do not commit to either master or development directly.
-Please use the following workflow instead.
+The mean of the parameters can be computed by the following code.
 
-### Reporting bugs
-- branch from master
-- write a test that exposes the bug
-- create an issue describing the bug, referencing the new branch
-
-### Bug fixes
-- assign yourself to the relevant issue
-- fix the bug on the dedicated branch
-- see that the new test (and all the old ones) passes
-- create a pull request
-- when a pull request is accepted close the issue and propagate changes to development
-
-### New features and performance enhancements
-- create an issue describing the proposed change
-- branch from development
-- write tests for the new features
-- implement the feature
-- see that all tests pass
-- create a pull request
-
-### Merging development into master
-- review changes from master
-- create a pull request
-
-## External contributions
-Turing is an open-source project and we welcome any and all contributions from the community. If you have comments, questions, suggestions, or bug reports, please open an issue and let us know. If you want to contribute bug fixes or new features, please fork the repo and make a pull requrest. If you'd like to make a more substantial contribution to Turing, please get in touch so we can discuss the best way to proceed.
+```
+m = mean([d[:m] for d in res[:samples]])
+s = mean([d[:s] for d in res[:samples]])
+```
