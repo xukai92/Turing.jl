@@ -1,21 +1,9 @@
 # Turing.jl
-[![Build Status](https://travis-ci.org/yebai/Turing.jl.svg?branch=master)](https://travis-ci.org/yebai/Turing.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/fvgi21998e1tfx0d/branch/master?svg=true)](https://ci.appveyor.com/project/yebai/turing-jl/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/yebai/Turing.jl/badge.svg?branch=master)](https://coveralls.io/github/yebai/Turing.jl?branch=master)
-[![Turing](http://pkg.julialang.org/badges/Turing_0.4.svg)](http://pkg.julialang.org/?pkg=Turing)
 
-
-Turing is a Julia library for probabilistic programming. A Turing probabilistic program is just a normal Julia program, wrapped in a `@model` macro, that uses some of the special macros listed below. Available inference methods include  Importance Sampling, Sequential Monte Carlo, Particle Gibbs.
-
-Authors: [Hong Ge](http://mlg.eng.cam.ac.uk/hong/), [Adam Scibior](http://mlg.eng.cam.ac.uk/?portfolio=adam-scibior), [Matej Balog](http://mlg.eng.cam.ac.uk/?portfolio=matej-balog), [Zoubin Ghahramani](http://mlg.eng.cam.ac.uk/zoubin/)
-
-### Relevant papers
-1. Ghahramani, Zoubin. "Probabilistic machine learning and artificial intelligence." Nature 521, no. 7553 (2015): 452-459. ([pdf](http://www.nature.com/nature/journal/v521/n7553/full/nature14541.html))
-2. Ge, Hong, Adam Scibior, and Zoubin Ghahramani "Turing: rejuvenating probabilistic programming in Julia." (In submission).
-
+This separate branch of Turing is a milestone version with HMC sampler supported and is for the evaluation purpose of the M.Phil project. The master repository of Turing is at [Turing.jl](https://github.com/yebai/Turing.jl).
 
 ### Example
-```julia
+```
 @model gaussdemo begin
   # Define a simple Normal model with unknown mean and variance.
   @assume s ~ InverseGamma(2,3)
@@ -24,6 +12,17 @@ Authors: [Hong Ge](http://mlg.eng.cam.ac.uk/hong/), [Adam Scibior](http://mlg.en
   @observe 2.0 ~ Normal(m, sqrt(s))
   @predict s m
 end
+
+chain = sample(gaussdemo, HMC(1000, 0.01, 15))
+```
+
+, where `1000` is the sample number, `0.01` is the leapfrog step size and `15` is the leapfrog step number.
+
+The mean of the parameters can be computed by the following code.
+
+```
+m = mean(chain[:m])
+s = mean(chain[:s])
 ```
 
 ## Installation
@@ -76,26 +75,3 @@ This patch adds the standard HMC sampler to Turing.
 
 `test/beta-binomial.jl` - the test file of samplers using a beta-binomial model
 - Three lines of codes were added to test the HMC sampler using the existing beta-binomial test case.
-
-**Usage**
-```
-@model gaussdemo begin
-  # Define a simple Normal model with unknown mean and variance.
-  @assume s ~ InverseGamma(2,3)
-  @assume m ~ Normal(0,sqrt(s))
-  @observe 1.5 ~ Normal(m, sqrt(s))
-  @observe 2.0 ~ Normal(m, sqrt(s))
-  @predict s m
-end
-
-res = sample(gaussdemo, HMC(1000, 0.01, 15))
-```
-
-, where `1000` is the sample number, `0.01` is the leapfrog step size and `15` is the leapfrog step number.
-
-The mean of the parameters can be computed by the following code.
-
-```
-m = mean([d[:m] for d in res[:samples]])
-s = mean([d[:s] for d in res[:samples]])
-```
