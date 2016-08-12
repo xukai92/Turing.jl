@@ -11,7 +11,7 @@ This separate branch of Turing is a milestone version with HMC sampler supported
 2. Use the following code to install Turing from GitHub and do testing.
 
   ```julia
-  Pkg.clone("https://github.com/yebai/Turing.jl")
+  Pkg.clone("https://github.com/xukai92/Turing.jl/tree/thesis")
   Pkg.build("Turing")
   Pkg.test("Turing")
   ```
