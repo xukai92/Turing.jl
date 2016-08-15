@@ -19,6 +19,8 @@ This separate branch of Turing is a milestone version with HMC sampler supported
 
   If all tests pass, you're ready to start using Turing.
 
+  > You may also need to install the package DualNumbers by `Pkg.add("DualNumbers")` and restart Julia afterwards.
+
 ### Example
 ```
 @model gaussdemo begin
