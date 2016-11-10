@@ -61,11 +61,6 @@ function align(x,y)
   return (x,y)
 end
 
-function kl(p :: Categorical, q :: Categorical)
-  a,b = align(p.p, q.p)
-  return kl_divergence(a,b)
-end
-
 #####################################
 # Helper functions for Dual numbers #
 #####################################
@@ -84,4 +79,4 @@ function make_dual(dim, real, idx)
   return Dual(real, tuple(collect(z)...))
 end
 
-export normalize!, kl, align, realpart, dualpart, make_dual
+export normalize!, align, realpart, dualpart, make_dual
